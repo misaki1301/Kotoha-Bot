@@ -4,14 +4,13 @@ import com.jagrosh.jdautilities.command.Command
 import com.jagrosh.jdautilities.command.CommandEvent
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter
 import net.dv8tion.jda.api.Permission
-import net.dv8tion.jda.api.entities.ChannelType
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 
 class MoveVoiceChatMembersCommand(waiter: EventWaiter): Command() {
     private var waiter: EventWaiter
     init {
         this.name = "moveit"
-        this.help = "Moves a bunch of faggots to another voice channel"
+        this.help = "Moves a every faggot to another voice channel"
         this.botPermissions = arrayOf(
             Permission.ADMINISTRATOR,
             Permission.VOICE_START_ACTIVITIES,
