@@ -25,6 +25,7 @@ repositories {
     mavenCentral()
     jcenter()
     maven("https://m2.dv8tion.net/releases")
+    maven("https://jitpack.io")
 }
 
 dependencies {
@@ -40,9 +41,10 @@ dependencies {
     implementation("com.github.insanusmokrassar:SauceNaoAPI:0.4.4")
     //discord bot
     implementation("com.jagrosh:jda-utilities:3.0.5")
-    implementation("net.dv8tion:JDA:4.4.0_350")
+    implementation("net.dv8tion:JDA:4.4.1_353")
     //audio player
-    implementation("com.sedmelluq:lavaplayer:1.3.77")
+    //implementation("com.sedmelluq:lavaplayer:1.3.78")
+    implementation("com.github.walkyst:lavaplayer-fork:1.4.3")
     // retrofit
     implementation("com.squareup.retrofit2:retrofit:2.5.0")
     implementation("com.squareup.okhttp3:okhttp:3.12.6")

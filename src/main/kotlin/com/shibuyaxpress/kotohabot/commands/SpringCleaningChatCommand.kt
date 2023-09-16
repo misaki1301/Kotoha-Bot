@@ -19,7 +19,7 @@ class SpringCleaningChatCommand: Command() {
     override fun execute(event: CommandEvent?) {
         //delete messages which contains "amazon"
         //val messages = event?.channel?.history?.retrievePast(100)?.complete()
-        val messages = event?.textChannel?.getHistoryBefore(event.message, 100)!!.queue { messageHistory ->
+        val messages = event?.textChannel?.getHistoryBefore(event.message, 10)!!.queue { messageHistory ->
             val message = messageHistory.retrievedHistory.filter { message ->
                 stores.any { store -> message.contentRaw.contains(store)}
             }

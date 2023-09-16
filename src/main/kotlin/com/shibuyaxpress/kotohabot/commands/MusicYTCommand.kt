@@ -15,7 +15,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import com.shibuyaxpress.kotohabot.handlers.AudioPlayerSendHandler
+import com.shibuyaxpress.kotohabot.player.GuildPlayerManager
 import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.MessageEmbed
 
 class MusicYTCommand(waiter: EventWaiter): Command() {
 
@@ -27,7 +29,7 @@ class MusicYTCommand(waiter: EventWaiter): Command() {
         this.botPermissions = arrayOf(
             Permission.ADMINISTRATOR,
             Permission.VOICE_START_ACTIVITIES,
-            Permission.VOICE_MOVE_OTHERS
+            Permission.VOICE_MOVE_OTHERS,
         )
         this.guildOnly = false
         this.waiter = waiter
@@ -37,28 +39,27 @@ class MusicYTCommand(waiter: EventWaiter): Command() {
         val messageEvent = event?.event
         println("I heard it")
             if (messageEvent?.isFromGuild == true) {
-                val identifier = event.message.embeds[0].url
+                val identifier = event.args
                 println("the song to sing by Kotoha $identifier")
                 val guild = messageEvent.guild
-                //val channel = guild.getVoiceChannelsByName("road-to-ultra", true)[0]
-                //get voice channel by member
+
                 val voiceChannel = messageEvent.member?.voiceState?.channel
                 val manager = guild.audioManager
-                //open voice channel to connect in
-                //manager.openAudioConnection(voiceChannel)
 
                 val playerManager = DefaultAudioPlayerManager()
                 AudioSourceManagers.registerRemoteSources(playerManager)
                 AudioSourceManagers.registerLocalSource(playerManager)
 
-                val player = playerManager.createPlayer()
-
-                val trackScheduler = TrackScheduler(player)
+                //val player = playerManager.createPlayer()
+                val player = GuildPlayerManager.getPlayer(guild.idLong)
+                val trackScheduler = GuildPlayerManager.trackScheduler
 
                 manager.sendingHandler = AudioPlayerSendHandler(player)
 
                 //connects to channel
-                manager.openAudioConnection(voiceChannel)
+                if (!manager.isConnected) {
+                    manager.openAudioConnection(voiceChannel)
+                }
                 println("nothing happened???")
 
                 playerManager.loadItem(identifier, object : AudioLoadResultHandler {
@@ -66,13 +67,20 @@ class MusicYTCommand(waiter: EventWaiter): Command() {
                     override fun trackLoaded(track: AudioTrack?) {
                        //trackScheduler.queue(track)
                         event.reply("now playing")
-                        player.playTrack(track)
+                        //player.playTrack(track)
+                        if (track != null) {
+                            trackScheduler.queue(track)
+                            event.reply("Added to queue: ${track.info.title}")
+                        }
                     }
 
                     override fun playlistLoaded(playlist: AudioPlaylist?) {
-                        //for (track in playlist!!.tracks) {
-                       //     trackScheduler.queue(track)
-                        //}r
+                        if (playlist != null) {
+                            for (track in playlist.tracks) {
+                                trackScheduler.queue(track)
+                            }
+                            event.reply("Added ${playlist.tracks.size} tracks to queue")
+                        }
                     }
 
                     override fun noMatches() {
@@ -82,7 +90,7 @@ class MusicYTCommand(waiter: EventWaiter): Command() {
 
                     override fun loadFailed(exception: FriendlyException?) {
                         //notify user that Kotoha is embarrassed
-                        event.reply("I can't sing that!!!")
+                        event.reply("I can't sing that!!! ${exception?.message}")
                     }
 
                 })
@@ -90,7 +98,24 @@ class MusicYTCommand(waiter: EventWaiter): Command() {
         }
 }
 
-class TrackScheduler(player: AudioPlayer?): AudioEventAdapter() {
+class TrackScheduler(private val player: AudioPlayer?): AudioEventAdapter() {
+
+    private val queue: MutableList<AudioTrack> = mutableListOf()
+
+    fun queue(track: AudioTrack) {
+        if (!queue.contains(track)) {
+            queue.add(track.makeClone())
+            if (player?.playingTrack == null) {
+                player?.startTrack(track, false)
+            }
+        }
+    }
+
+    fun nextTrack() {
+        queue.removeAt(0)
+        val nextTrack = queue.firstOrNull()
+        player?.startTrack(nextTrack, false)
+    }
 
     override fun onPlayerPause(player: AudioPlayer?) {
         super.onPlayerPause(player)
@@ -113,6 +138,18 @@ class TrackScheduler(player: AudioPlayer?): AudioEventAdapter() {
             // Start next track
         }
 
+        when (endReason) {
+            AudioTrackEndReason.FINISHED -> {
+                println("Finish track")
+                println(queue)
+                nextTrack()
+            }
+            AudioTrackEndReason.LOAD_FAILED -> println("Failed to Load")
+            AudioTrackEndReason.STOPPED -> println("Track Stopped")
+            AudioTrackEndReason.REPLACED -> println("Replaced current track")
+            AudioTrackEndReason.CLEANUP -> println("Cleaning mess")
+        }
+
         // endReason == FINISHED: A track finished or died by an exception (mayStartNext = true).
         // endReason == LOAD_FAILED: Loading of a track failed (mayStartNext = true).
         // endReason == STOPPED: The player was stopped.
@@ -124,6 +161,7 @@ class TrackScheduler(player: AudioPlayer?): AudioEventAdapter() {
     override fun onTrackException(player: AudioPlayer?, track: AudioTrack?, exception: FriendlyException?) {
         super.onTrackException(player, track, exception)
         //an already playing track threw an exception (tack end event will still be received separately!)
+        println(exception?.localizedMessage)
     }
 
     override fun onTrackStuck(player: AudioPlayer?, track: AudioTrack?, thresholdMs: Long) {

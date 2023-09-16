@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class BotConfiguration {
-    private var token: String = "Njk5NDIxMTU2NTI4MjI2MzE2.XpUItg.dWHHnY5P7W_YcPn0vWkX5YxqUFo"
+    private var token: String = "Njk5NDIxMTU2NTI4MjI2MzE2.G3G8wS.9uJrUBCkbVlMueFRhjgH2IO2rbSnk3TYZfPCj8"
     private var waiter = EventWaiter()
     private var client = CommandClientBuilder()
 
