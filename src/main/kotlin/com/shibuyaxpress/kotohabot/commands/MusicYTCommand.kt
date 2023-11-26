@@ -25,7 +25,7 @@ class MusicYTCommand(waiter: EventWaiter): Command() {
 
     init {
         this.name = "play"
-        this.help = "Moves a every faggot to another voice channel"
+        this.help = "Plays music from YT or another source provider of music idk"
         this.botPermissions = arrayOf(
             Permission.ADMINISTRATOR,
             Permission.VOICE_START_ACTIVITIES,

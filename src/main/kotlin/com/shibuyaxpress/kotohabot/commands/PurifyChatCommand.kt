@@ -18,7 +18,8 @@ class PurifyChatCommand: Command() {
             val member = "235088799074484224"
             event.replyWarning("Starting delete process")
             event.textChannel?.getHistoryBefore(event.message, 100)!!.queue {
-                val messages = it.retrievedHistory.filter { x -> x.author.isBot || x.contentRaw.contains("!play") || x.author.id == member}
+                val messages = it.retrievedHistory
+                    //.filter { x -> x.author.isBot || x.contentRaw.contains("!play") || x.author.id == member}
                 println("numero de mensajes encontrados $messages")
                 for (message in messages) {
                     println(message.author.id+ ' '+message.contentRaw)
